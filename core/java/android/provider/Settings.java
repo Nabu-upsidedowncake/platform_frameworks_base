@@ -6339,6 +6339,13 @@ public final class Settings {
         public static final String VOLUME_SLIDER_HAPTIC = "volume_slider_haptic";
 
         /**
+         * Whether to vibrate when quick settings tile is pressed.
+         *
+         * @hide
+         */
+        public static final String QS_TILES_HAPTIC = "qs_tiles_haptic";
+
+        /**
          * @hide
          */
         public static final String QS_TRANSPARENCY = "qs_transparency";
