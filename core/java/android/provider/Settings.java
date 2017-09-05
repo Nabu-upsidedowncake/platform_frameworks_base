@@ -6306,6 +6306,24 @@ public final class Settings {
         public static final String ARCANE_IDLE_MANAGER = "arcane_idle_manager";
 
         /**
+         * Whether the phone vibrates on call connect
+         * @hide
+         */
+        public static final String VIBRATE_ON_CONNECT = "vibrate_on_connect";
+
+        /**
+         * Whether the phone vibrates on call waiting
+         * @hide
+         */
+        public static final String VIBRATE_ON_CALLWAITING = "vibrate_on_callwaiting";
+
+        /**
+         * Whether the phone vibrates on disconnect
+         * @hide
+         */
+        public static final String VIBRATE_ON_DISCONNECT = "vibrate_on_disconnect";
+
+        /**
          * Gesture navbar IME space.
          * Supported modes: 0 for normal length, 1 for narrow and 2 for hidden.
          * Default 0.
@@ -6697,6 +6715,9 @@ public final class Settings {
             PRIVATE_SETTINGS.add(NAVIGATION_BAR_IME_SPACE);
             PRIVATE_SETTINGS.add(FORCE_FULLSCREEN_CUTOUT_APPS);
             PRIVATE_SETTINGS.add(AMBIENT_WAKE_GESTURES);
+            PRIVATE_SETTINGS.add(VIBRATE_ON_CONNECT);
+            PRIVATE_SETTINGS.add(VIBRATE_ON_CALLWAITING);
+            PRIVATE_SETTINGS.add(VIBRATE_ON_DISCONNECT);
         }
         /**
          * These entries are considered common between the personal and the managed profile,
