@@ -248,5 +248,6 @@ public class SecureSettings {
         Settings.Secure.SYSTEM_BLACK_THEME,
         Settings.Secure.IGNORE_AUTH_CONFIRMATION,
         Settings.Secure.DOZE_ON_CHARGE,
+        Settings.Secure.TETHERING_ALLOW_VPN_UPSTREAMS,
     };
 }
