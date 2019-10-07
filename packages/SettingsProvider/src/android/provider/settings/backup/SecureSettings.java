@@ -247,5 +247,6 @@ public class SecureSettings {
         Settings.Secure.SEARCH_LONG_PRESS_HOME_ENABLED,
         Settings.Secure.SYSTEM_BLACK_THEME,
         Settings.Secure.IGNORE_AUTH_CONFIRMATION,
+        Settings.Secure.DOZE_ON_CHARGE,
     };
 }
