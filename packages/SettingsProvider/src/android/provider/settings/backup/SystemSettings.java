@@ -102,5 +102,6 @@ public class SystemSettings {
         Settings.System.SCREEN_FLASH_NOTIFICATION_COLOR,
         Settings.System.KEYGAURD_MEDIA_ART,
         Settings.System.NAVIGATION_BAR_INVERSE,
+        Settings.System.NAVBAR_LAYOUT_VIEWS,
     };
 }
