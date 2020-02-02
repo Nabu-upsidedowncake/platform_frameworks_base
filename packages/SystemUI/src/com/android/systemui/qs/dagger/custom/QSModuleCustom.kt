@@ -26,6 +26,7 @@ import com.android.systemui.qs.tiles.AODTile
 import com.android.systemui.qs.tiles.CPUInfoTile
 import com.android.systemui.qs.tiles.DataSwitchTile
 import com.android.systemui.qs.tiles.CompassTile
+import com.android.systemui.qs.tiles.MonoToggleTile
 import com.android.systemui.qs.tiles.UsbTetherTile
 import com.android.systemui.qs.tiles.VpnTile
 import com.android.systemui.qs.tiles.LiveDisplayTile
@@ -90,6 +91,12 @@ interface QSModuleCustom {
     @IntoMap
     @StringKey(HeadsUpTile.TILE_SPEC)
     fun bindHeadsUpTile(headsUpTile: HeadsUpTile): QSTileImpl<*>
+
+    /** Inject MonoToggleTile into tileMap in QSModule */
+    @Binds
+    @IntoMap
+    @StringKey(MonoToggleTile.TILE_SPEC)
+    fun bindMonoToggleTile(monoToggleTile: MonoToggleTile): QSTileImpl<*>
 
     /** Inject SyncTile into tileMap in QSModule */
     @Binds
