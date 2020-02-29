@@ -7444,5 +7444,8 @@ message MetricsEvent {
 
     // AWAKEN Metrics
     AWAKEN = 2772;
+
+    // Panel for Mobile Data
+    PANEL_MOBILE_DATA = 4001;
   }
 }
