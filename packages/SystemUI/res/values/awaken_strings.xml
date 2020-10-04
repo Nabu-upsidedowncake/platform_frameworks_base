@@ -144,4 +144,7 @@
     <!-- Navigation bar dpad -->
     <string name="accessibility_dpad_left">Cursor left</string>
     <string name="accessibility_dpad_right">Cursor right</string>
+
+    <!-- Statusbar Icons -->
+    <string name="status_bar_nfc">NFC</string>
 </resources>
