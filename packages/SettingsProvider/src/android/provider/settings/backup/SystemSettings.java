@@ -109,5 +109,6 @@ public class SystemSettings {
         Settings.System.NETWORK_TRAFFIC_STATE,
         Settings.System.NETWORK_TRAFFIC_AUTOHIDE_THRESHOLD,
         Settings.System.AMBIENT_WAKE_GESTURES,
+        Settings.System.NOTIFICATION_HEADERS,
     };
 }

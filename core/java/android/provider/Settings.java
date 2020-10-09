@@ -5833,6 +5833,13 @@ public final class Settings {
         public static final String KEYGAURD_MEDIA_ART = "keygaurd_media_art";
 
         /**
+         * Controls whether to show notification headers
+         * @hide
+         */
+        @Readable
+        public static final String NOTIFICATION_HEADERS = "notification_headers";
+
+        /**
          * Whether allowing pocket service to register sensors and dispatch informations.
          *   0 = disabled
          *   1 = enabled
