@@ -6060,6 +6060,13 @@ public final class Settings {
         public static final String ENABLE_RIPPLE_EFFECT = "enable_ripple_effect";
 
         /**
+         * Volume dialog timeout. Value in seconds
+         * @hide
+         */
+        @Readable
+        public static final String VOLUME_DIALOG_TIMEOUT = "volume_dialog_timeout";
+
+        /**
          * Whether to enable Smart Pixels
          * @hide
          */
