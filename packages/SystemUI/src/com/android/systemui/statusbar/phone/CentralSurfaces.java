@@ -43,6 +43,7 @@ import com.android.systemui.display.data.repository.DisplayMetricsRepository;
 import com.android.systemui.navigationbar.NavigationBarView;
 import com.android.systemui.plugins.ActivityStarter.OnDismissAction;
 import com.android.systemui.qs.QSPanelController;
+import com.android.systemui.shade.NotificationPanelViewController;
 import com.android.systemui.shared.system.RemoteAnimationRunnerCompat;
 import com.android.systemui.statusbar.NotificationPresenter;
 import com.android.systemui.statusbar.notification.row.ExpandableNotificationRow;
@@ -376,6 +377,8 @@ public interface CentralSurfaces extends Dumpable, LifecycleOwner {
     float getDisplayDensity();
 
     void extendDozePulse();
+
+    void setBlockedGesturalNavigation(boolean blocked);
 
     public static class KeyboardShortcutsMessage {
         final int mDeviceId;
