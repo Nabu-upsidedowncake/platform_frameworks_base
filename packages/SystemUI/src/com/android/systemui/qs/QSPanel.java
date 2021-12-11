@@ -491,7 +491,9 @@ public class QSPanel extends LinearLayout implements Tunable {
 
         if (mBrightnessView != null && !mTop) {
             switchToParent(mBrightnessView, parent, index);
-            index++;
+            boolean mediaInQS = Settings.Global.getInt(mContext.getContentResolver(),
+                    Settings.Global.SHOW_MEDIA_ON_QUICK_SETTINGS, 1) == 1;
+            if (mediaInQS) index++;
         }
 
         if (mFooter != null) {
@@ -675,6 +677,7 @@ public class QSPanel extends LinearLayout implements Tunable {
                 mTileLayout.setMaxColumns(horizontal ? 2 : 4);
             }
             updateMargins(mediaHostView);
+            if (mHorizontalLinearLayout == null) return;
             mHorizontalLinearLayout.setVisibility(horizontal ? View.VISIBLE : View.GONE);
         }
     }
