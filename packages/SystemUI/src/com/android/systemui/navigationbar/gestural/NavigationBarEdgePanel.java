@@ -235,6 +235,7 @@ public class NavigationBarEdgePanel extends View implements NavigationEdgeBackPl
 
     private boolean mIsLongSwipeEnabled;
     private boolean mBackArrowVisibility;
+    private boolean mEdgeHapticEnabled;
 
     private DynamicAnimation.OnAnimationEndListener mSetGoneEndListener
             = new DynamicAnimation.OnAnimationEndListener() {
@@ -453,6 +454,11 @@ public class NavigationBarEdgePanel extends View implements NavigationEdgeBackPl
     @Override
     public void setBackArrowVisibility(boolean backArrowVisibility) {
         mBackArrowVisibility = backArrowVisibility;
+    }
+
+    @Override
+    public void setEdgeHapticEnabled(boolean edgeHapticEnabled) {
+        mEdgeHapticEnabled = edgeHapticEnabled;
     }
 
     /**
@@ -674,8 +680,8 @@ public class NavigationBarEdgePanel extends View implements NavigationEdgeBackPl
         mVelocityTracker.computeCurrentVelocity(1000);
         // Only do the extra translation if we're not already flinging
         boolean isSlow = Math.abs(mVelocityTracker.getXVelocity()) < 500;
-        if (isSlow
-                || SystemClock.uptimeMillis() - mVibrationTime >= GESTURE_DURATION_FOR_CLICK_MS) {
+        if (mEdgeHapticEnabled && (isSlow
+                || SystemClock.uptimeMillis() - mVibrationTime >= GESTURE_DURATION_FOR_CLICK_MS)) {
             mVibratorHelper.vibrate(VibrationEffect.EFFECT_CLICK);
         }
 
@@ -774,8 +780,10 @@ public class NavigationBarEdgePanel extends View implements NavigationEdgeBackPl
         // Apply a haptic on drag slop passed
         if (!mDragSlopPassed && touchTranslation > mSwipeTriggerThreshold) {
             mDragSlopPassed = true;
-            mVibratorHelper.vibrate(VibrationEffect.EFFECT_TICK);
-            mVibrationTime = SystemClock.uptimeMillis();
+            if (mEdgeHapticEnabled) {
+                mVibratorHelper.vibrate(VibrationEffect.EFFECT_TICK);
+                mVibrationTime = SystemClock.uptimeMillis();
+            }
 
             // Let's show the arrow and animate it in!
             mDisappearAmount = 0.0f;
