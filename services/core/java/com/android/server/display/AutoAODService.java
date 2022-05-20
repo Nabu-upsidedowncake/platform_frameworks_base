@@ -385,6 +385,9 @@ public class AutoAODService extends SystemService {
             }
         }
 
+        if (currentTime.before(since) && currentTime.before(till) && till.compareTo(since) < 0) {
+            since.add(Calendar.DATE, -1);
+        }
         // roll to the next day if needed be
         if (since.after(till)) till.roll(Calendar.DATE, true);
         if (currentTime.after(since) && currentTime.compareTo(till) >= 0) {
