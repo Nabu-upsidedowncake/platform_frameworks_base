@@ -48,4 +48,7 @@
 
     <!-- StatusBar burn-in protection -->
     <bool name="config_disableStatusBarBurnInProtection">false</bool>
+
+    <!-- Charging info current divider, if needed -->
+    <integer name="config_currentInfoDivider" translatable="false">1000</integer>
 </resources>
