@@ -140,6 +140,9 @@ public class PixelPropsUtils {
     private static volatile boolean sIsGms, sIsFinsky, sIsSetupWizard;
     private static volatile String sProcessName;
 
+    private static final String sNetflixModel =
+            Resources.getSystem().getString(R.string.config_netflixSpoofModel);
+
     static {
         propsToKeep = new HashMap<>();
         propsToKeep.put(PACKAGE_SI, new ArrayList<>(Collections.singletonList("FINGERPRINT")));
@@ -333,6 +336,11 @@ public class PixelPropsUtils {
         // Set proper indexing fingerprint
         if (packageName.equals(PACKAGE_SI)) {
             setPropValue("FINGERPRINT", String.valueOf(Build.TIME));
+            return;
+        }
+        if (!sNetflixModel.isEmpty() && packageName.equals("com.netflix.mediaclient")) {
+            if (DEBUG) Log.d(TAG, "Setting model to " + sNetflixModel + " for Netflix");
+            setPropValue("MODEL", sNetflixModel);
             return;
         }
     }
