@@ -575,4 +575,7 @@
     <!-- This uses non-regular transparent intentionally. It is used to tell if the transparent
          color is set by the framework or not. -->
     <color name="navigation_bar_default">#00808080</color>
+
+    <color name="xd_background1">@android:color/system_neutral1_50</color>
+    <color name="xd_background2">@android:color/system_neutral1_100</color>
 </resources>
