@@ -8,6 +8,7 @@
     <string name="global_action_current_user">Current</string>
     <string name="global_action_users">Users</string>
     <string name="global_action_panic">Panic trigger</string>
+    <string name="global_action_restart_systemui">SystemUI</string>
 
     <!-- Custom QS tiles -->
 	<!-- Label for the area where tiles can be added to the Quick Settings panel -->

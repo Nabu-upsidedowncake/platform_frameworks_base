@@ -33,6 +33,7 @@ public class PowerMenuConstants {
     public static final String GLOBAL_ACTION_KEY_EMERGENCY = "emergency";
     public static final String GLOBAL_ACTION_KEY_DEVICECONTROLS = "devicecontrols";
     public static final String GLOBAL_ACTION_KEY_PANIC = "panic";
+    public static final String GLOBAL_ACTION_KEY_RESTART_SYSTEMUI = "restart_systemui";
 
     /**
      * Advanced restart menu actions
@@ -63,6 +64,7 @@ public class PowerMenuConstants {
         GLOBAL_ACTION_KEY_ASSIST,
         GLOBAL_ACTION_KEY_DEVICECONTROLS,
         GLOBAL_ACTION_KEY_PANIC,
+        GLOBAL_ACTION_KEY_RESTART_SYSTEMUI,
         GLOBAL_ACTION_KEY_LOGOUT,
     };
 
