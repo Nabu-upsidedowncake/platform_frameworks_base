@@ -246,5 +246,6 @@ public class SecureSettings {
         Settings.Secure.TETHERING_ALLOW_VPN_UPSTREAMS,
         Settings.Secure.BERRY_BLACK_THEME,
         Settings.Secure.DOZE_ON_CHARGE,
+        Settings.Secure.MEDIA_CONTROLS_ALWAYS_SHOW_TIME,
     };
 }
