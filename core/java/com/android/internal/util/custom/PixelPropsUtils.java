@@ -48,7 +48,6 @@ public class PixelPropsUtils {
     private static final String PACKAGE_FINSKY = "com.android.vending";
     private static final String PACKAGE_GMS = "com.google.android.gms";
     private static final String PROCESS_GMS_UNSTABLE = PACKAGE_GMS + ".unstable";
-    private static final String PACKAGE_GPHOTOS = "com.google.android.apps.photos";
     private static final String PACKAGE_SI = "com.google.android.settings.intelligence";
     private static final String SAMSUNG = "com.samsung.";
     private static final String SPOOF_MUSIC_APPS = "persist.sys.disguise_props_for_music_app";
@@ -63,30 +62,42 @@ public class PixelPropsUtils {
             Resources.getSystem().getBoolean(R.bool.config_enablePixelProps);
 
     private static final Map<String, Object> propsToChangeGeneric;
+    private static final Map<String, Object> propsToChangePixelFold;
     private static final Map<String, Object> propsToChangeRecentPixel;
     private static final Map<String, Object> propsToChangePixel5;
     private static final Map<String, Object> propsToChangeMeizu;
+    private static final Map<String, Object> propsToChangePixelXL;
     private static final Map<String, ArrayList<String>> propsToKeep;
 
     // Packages to Spoof as the most recent Pixel device
     private static final String[] packagesToChangeRecentPixel = {
-            "com.amazon.avod.thirdpartyclient",
-            "com.android.chrome",
-            "com.breel.wallpapers20",
-            "com.disney.disneyplus",
-            "com.google.android.apps.customization.pixel",
-            "com.google.android.apps.emojiwallpaper",
-            "com.google.android.apps.privacy.wildlife",
-            "com.google.android.apps.subscriptions.red",
-            "com.google.android.apps.wallpaper",
-            "com.google.android.apps.wallpaper.pixel",
-            "com.google.android.wallpaper.effects",
-            "com.google.pixel.livewallpaper",
-            "com.microsoft.android.smsorganizer",
-            "com.nhs.online.nhsonline",
-            "com.nothing.smartcenter",
-            "in.startv.hotstar"
+                "com.android.chrome",
+                "com.breel.wallpapers20",
+                "com.microsoft.android.smsorganizer",
+                "com.nothing.smartcenter",
+                "com.nhs.online.nhsonline",
+                "com.amazon.avod.thirdpartyclient",
+                "com.disney.disneyplus",
+                "in.startv.hotstar",
+                "com.google.android.apps.emojiwallpaper",
+                "com.google.android.wallpaper.effects",
+                "com.google.pixel.livewallpaper",
+                "com.google.android.apps.wallpaper.pixel",
+                "com.google.android.apps.wallpaper",
+                "com.google.android.apps.customization.pixel",
+                "com.google.android.apps.privacy.wildlife",
+                "com.google.android.apps.subscriptions.red"
     };
+
+    private static final ArrayList<String> packagesToChangePixelFold = 
+        new ArrayList<String> (
+            Arrays.asList(
+        ));
+
+    private static final ArrayList<String> extraPackagesToChange = 
+        new ArrayList<String> (
+            Arrays.asList(
+        ));
 
     private static final String[] customGoogleCameraPackages = {
             "com.google.android.MTCL83",
@@ -96,23 +107,20 @@ public class PixelPropsUtils {
 
     // Packages to Keep with original device
     private static final String[] packagesToKeep = {
-            PACKAGE_GPHOTOS,
-            "com.google.android.apps.motionsense.bridge",
-            "com.google.android.apps.pixelmigrate",
-            "com.google.android.apps.recorder",
-            "com.google.android.apps.restore",
-            "com.google.android.apps.tachyon",
-            "com.google.android.apps.tycho",
-            "com.google.android.apps.wearables.maestro.companion",
-            "com.google.android.apps.youtube.kids",
-            "com.google.android.apps.youtube.music",
-            "com.google.android.as",
-            "com.google.android.dialer",
-            "com.google.android.euicc",
-            "com.google.android.setupwizard",
-            "com.google.android.youtube",
-            "com.google.ar.core",
-            "com.google.oslo"
+                "com.google.android.as",
+                "com.google.android.apps.motionsense.bridge",
+                "com.google.android.euicc",
+                "com.google.ar.core",
+                "com.google.android.youtube",
+                "com.google.android.apps.youtube.kids",
+                "com.google.android.apps.youtube.music",
+                "com.google.android.apps.wearables.maestro.companion",
+                "com.google.android.apps.subscriptions.red",
+                "com.google.android.apps.tachyon",
+                "com.google.android.apps.tycho",
+                "com.google.android.apps.restore",
+                "com.google.oslo",
+                "it.ingdirect.app"
     };
 
     // Packages to Spoof as Meizu
@@ -138,6 +146,15 @@ public class PixelPropsUtils {
         propsToChangeGeneric = new HashMap<>();
         propsToChangeGeneric.put("TYPE", "user");
         propsToChangeGeneric.put("TAGS", "release-keys");
+        propsToChangePixelFold = new HashMap<>();
+        propsToChangePixelFold.put("BRAND", "google");
+        propsToChangePixelFold.put("MANUFACTURER", "Google");
+        propsToChangePixelFold.put("DEVICE", "felix");
+        propsToChangePixelFold.put("PRODUCT", "felix");
+        propsToChangePixelFold.put("HARDWARE", "felix");
+        propsToChangePixelFold.put("MODEL", "Pixel Fold");
+        propsToChangePixelFold.put("ID", "UP1A.231105.003");
+        propsToChangePixelFold.put("FINGERPRINT", "google/felix/felix:14/UP1A.231105.003/11010452:user/release-keys");
         propsToChangeRecentPixel = new HashMap<>();
         propsToChangeRecentPixel.put("BRAND", "google");
         propsToChangeRecentPixel.put("MANUFACTURER", "Google");
@@ -163,6 +180,15 @@ public class PixelPropsUtils {
         propsToChangeMeizu.put("DISPLAY", "Flyme");
         propsToChangeMeizu.put("PRODUCT", "meizu_16thPlus_CN");
         propsToChangeMeizu.put("MODEL", "meizu 16th Plus");
+        propsToChangePixelXL = new HashMap<>();
+        propsToChangePixelXL.put("BRAND", "google");
+        propsToChangePixelXL.put("MANUFACTURER", "Google");
+        propsToChangePixelXL.put("DEVICE", "marlin");
+        propsToChangePixelXL.put("PRODUCT", "marlin");
+        propsToChangePixelXL.put("HARDWARE", "marlin");
+        propsToChangePixelXL.put("MODEL", "Pixel XL");
+        propsToChangePixelXL.put("ID", "QP1A.191005.007.A3");
+        propsToChangePixelXL.put("FINGERPRINT", "google/marlin/marlin:10/QP1A.191005.007.A3/5972272:user/release-keys");
     }
 
     private static String getBuildID(String fingerprint) {
@@ -272,6 +298,7 @@ public class PixelPropsUtils {
             setPropValue("TIME", System.currentTimeMillis());
         } else if (packageName.startsWith("com.google.")
                 || packageName.startsWith(SAMSUNG)
+                || packagesToChangePixelFold.contains(processName)
                 || Arrays.asList(packagesToChangeRecentPixel).contains(packageName)) {
 
             if (!sEnablePixelProps) {
@@ -279,13 +306,19 @@ public class PixelPropsUtils {
                 return;
             } else if (Arrays.asList(packagesToChangeRecentPixel).contains(packageName)) {
                 propsToChange.putAll(propsToChangeRecentPixel);
+            } else if (packagesToChangePixelFold.contains(processName)) {
+                propsToChange = propsToChangePixelFold;
             } else {
                 propsToChange.putAll(propsToChangePixel5);
+            }
+            if (processName.equals("com.google.android.apps.photos")) {
+                    propsToChange = propsToChangePixelXL;
             }
         } else if ((SystemProperties.getBoolean(SPOOF_MUSIC_APPS, false)) &&
                 (Arrays.asList(packagesToChangeMeizu).contains(packageName))) {
             propsToChange.putAll(propsToChangeMeizu);
         }
+        if (propsToChange == null || propsToChange.isEmpty()) return;
         dlog("Defining props for: " + packageName);
         for (Map.Entry<String, Object> prop : propsToChange.entrySet()) {
             String key = prop.getKey();
