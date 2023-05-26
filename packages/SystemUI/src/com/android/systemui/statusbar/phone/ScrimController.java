@@ -28,6 +28,7 @@ import android.app.AlarmManager;
 import android.graphics.Color;
 import android.os.Handler;
 import android.os.Trace;
+import android.provider.Settings;
 import android.util.Log;
 import android.util.MathUtils;
 import android.util.Pair;
@@ -48,6 +49,7 @@ import com.android.keyguard.BouncerPanelExpansionCalculator;
 import com.android.keyguard.KeyguardUpdateMonitor;
 import com.android.keyguard.KeyguardUpdateMonitorCallback;
 import com.android.settingslib.Utils;
+import com.android.systemui.Dependency;
 import com.android.systemui.DejankUtils;
 import com.android.systemui.Dumpable;
 import com.android.systemui.R;
@@ -57,6 +59,7 @@ import com.android.systemui.dagger.qualifiers.Main;
 import com.android.systemui.dock.DockManager;
 import com.android.systemui.flags.FeatureFlags;
 import com.android.systemui.flags.Flags;
+import com.android.systemui.tuner.TunerService;
 import com.android.systemui.keyguard.KeyguardUnlockAnimationController;
 import com.android.systemui.keyguard.domain.interactor.KeyguardTransitionInteractor;
 import com.android.systemui.keyguard.shared.constants.KeyguardBouncerConstants;
@@ -96,6 +99,9 @@ public class ScrimController implements ViewTreeObserver.OnPreDrawListener, Dump
 
     // debug mode colors scrims with below debug colors, irrespectively of which state they're in
     public static final boolean DEBUG_MODE = false;
+
+    private static final String QS_DUAL_TONE =
+            "system:" + Settings.System.QS_DUAL_TONE;
 
     public static final int DEBUG_NOTIFICATIONS_TINT = Color.RED;
     public static final int DEBUG_FRONT_TINT = Color.GREEN;
@@ -268,6 +274,8 @@ public class ScrimController implements ViewTreeObserver.OnPreDrawListener, Dump
     private boolean mWakeLockHeld;
     private boolean mKeyguardOccluded;
 
+    private boolean mUseDualToneColor;
+
     private KeyguardTransitionInteractor mKeyguardTransitionInteractor;
     private CoroutineDispatcher mMainDispatcher;
     private boolean mIsBouncerToGoneTransitionRunning = false;
@@ -351,6 +359,13 @@ public class ScrimController implements ViewTreeObserver.OnPreDrawListener, Dump
         mKeyguardTransitionInteractor = keyguardTransitionInteractor;
         mMainDispatcher = mainDispatcher;
         mBehindColors = new GradientColors();
+        TunerService tunerService = Dependency.get(TunerService.class);
+        tunerService.addTunable((key, newValue) -> {
+            if (key.equals(QS_DUAL_TONE)) {
+            	mUseDualToneColor = TunerService.parseIntegerSwitch(newValue, true);
+                ScrimController.this.onThemeChanged();
+            }
+        }, QS_DUAL_TONE);
     }
 
     /**
@@ -421,6 +436,7 @@ public class ScrimController implements ViewTreeObserver.OnPreDrawListener, Dump
                 mPrimaryBouncerToGoneTransition, mMainDispatcher);
         collectFlow(behindScrim, mPrimaryBouncerToGoneTransitionViewModel.getScrimAlpha(),
                 mScrimAlphaConsumer, mMainDispatcher);
+
     }
 
     // TODO(b/270984686) recompute scrim height accurately, based on shade contents.
@@ -1518,7 +1534,7 @@ public class ScrimController implements ViewTreeObserver.OnPreDrawListener, Dump
                     ColorUtils.calculateContrast(mColors.getMainColor(), Color.WHITE) > 4.5);
         }
 
-        mBehindColors.setMainColor(surfaceBackground);
+        mBehindColors.setMainColor(mUseDualToneColor ? surfaceBackground : background);
         mBehindColors.setSecondaryColor(accent);
         mBehindColors.setSupportsDarkText(
                 ColorUtils.calculateContrast(mBehindColors.getMainColor(), Color.WHITE) > 4.5);
