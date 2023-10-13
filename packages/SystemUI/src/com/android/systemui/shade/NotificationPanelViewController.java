@@ -659,6 +659,7 @@ public final class NotificationPanelViewController implements ShadeSurface, Dump
      * For PanelView fling perflock call
      */
     private BoostFramework mPerf = null;
+    private boolean mNeedFlingAnimation = false;
 
     private final Runnable mFlingCollapseRunnable = () -> fling(0, false /* expand */,
             mNextCollapseSpeedUpFactor, false /* expandBecauseOfFalsing */);
@@ -2200,8 +2201,16 @@ public final class NotificationPanelViewController implements ShadeSurface, Dump
                 }
             }
         });
+        if (!mScrimController.isScreenOn() && !mNeedFlingAnimation) {
+            animator.setDuration(0);
+        }
         setAnimator(animator);
         animator.start();
+    }
+
+    @VisibleForTesting
+    void setNeedFlingAnimation(boolean need) {
+        mNeedFlingAnimation = need;
     }
 
     @VisibleForTesting
