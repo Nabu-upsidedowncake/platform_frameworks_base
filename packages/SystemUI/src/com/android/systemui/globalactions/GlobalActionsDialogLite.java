@@ -127,6 +127,7 @@ import com.android.systemui.plugins.GlobalActions.GlobalActionsManager;
 import com.android.systemui.plugins.GlobalActionsPanelPlugin;
 import com.android.systemui.scrim.ScrimDrawable;
 import com.android.systemui.settings.UserTracker;
+import com.android.systemui.statusbar.BlurUtils;
 import com.android.systemui.statusbar.NotificationShadeWindowController;
 import com.android.systemui.statusbar.VibratorHelper;
 import com.android.systemui.statusbar.phone.CentralSurfaces;
@@ -255,6 +256,7 @@ public class GlobalActionsDialogLite implements DialogInterface.OnDismissListene
     private final Optional<CentralSurfaces> mCentralSurfacesOptional;
     private final KeyguardUpdateMonitor mKeyguardUpdateMonitor;
     private final DialogLaunchAnimator mDialogLaunchAnimator;
+    private final BlurUtils mBlurUtils;
 
     @VisibleForTesting
     public enum GlobalActionsEvent implements UiEventLogger.UiEventEnum {
@@ -364,7 +366,8 @@ public class GlobalActionsDialogLite implements DialogInterface.OnDismissListene
             PackageManager packageManager,
             Optional<CentralSurfaces> centralSurfacesOptional,
             KeyguardUpdateMonitor keyguardUpdateMonitor,
-            DialogLaunchAnimator dialogLaunchAnimator) {
+            DialogLaunchAnimator dialogLaunchAnimator,
+            BlurUtils blurUtils) {
         mContext = context;
         mWindowManagerFuncs = windowManagerFuncs;
         mAudioManager = audioManager;
@@ -398,6 +401,7 @@ public class GlobalActionsDialogLite implements DialogInterface.OnDismissListene
         mCentralSurfacesOptional = centralSurfacesOptional;
         mKeyguardUpdateMonitor = keyguardUpdateMonitor;
         mDialogLaunchAnimator = dialogLaunchAnimator;
+        mBlurUtils = blurUtils;
 
         // receive broadcasts
         IntentFilter filter = new IntentFilter();
@@ -764,7 +768,7 @@ public class GlobalActionsDialogLite implements DialogInterface.OnDismissListene
                 mLightBarController,
                 mNotificationShadeWindowController, this::onRefresh, mKeyguardShowing,
                 mPowerAdapter, mUiEventLogger, mCentralSurfacesOptional, mKeyguardUpdateMonitor,
-                mLockPatternUtils);
+                mLockPatternUtils, mBlurUtils);
 
         dialog.setOnDismissListener(this);
         dialog.setOnShowListener(this);
@@ -2290,6 +2294,7 @@ public class GlobalActionsDialogLite implements DialogInterface.OnDismissListene
         private Optional<CentralSurfaces> mCentralSurfacesOptional;
         private KeyguardUpdateMonitor mKeyguardUpdateMonitor;
         private LockPatternUtils mLockPatternUtils;
+        private BlurUtils mBlurUtils;
         private float mWindowDimAmount;
 
         protected ViewGroup mContainer;
@@ -2362,7 +2367,8 @@ public class GlobalActionsDialogLite implements DialogInterface.OnDismissListene
                 MyPowerOptionsAdapter powerAdapter, UiEventLogger uiEventLogger,
                 Optional<CentralSurfaces> centralSurfacesOptional,
                 KeyguardUpdateMonitor keyguardUpdateMonitor,
-                LockPatternUtils lockPatternUtils) {
+                LockPatternUtils lockPatternUtils,
+                BlurUtils blurUtils) {
             // We set dismissOnDeviceLock to false because we have a custom broadcast receiver to
             // dismiss this dialog when the device is locked.
             super(context, themeRes, false /* dismissOnDeviceLock */);
@@ -2380,6 +2386,7 @@ public class GlobalActionsDialogLite implements DialogInterface.OnDismissListene
             mCentralSurfacesOptional = centralSurfacesOptional;
             mKeyguardUpdateMonitor = keyguardUpdateMonitor;
             mLockPatternUtils = lockPatternUtils;
+            mBlurUtils = blurUtils;
             mGestureDetector = new GestureDetector(mContext, mGestureListener);
         }
 
@@ -2667,6 +2674,11 @@ public class GlobalActionsDialogLite implements DialogInterface.OnDismissListene
                 float alpha = isEnter ? progress : 1 - progress;
                 mGlobalActionsLayout.setAlpha(alpha);
                 window.setDimAmount(mWindowDimAmount * alpha);
+
+                if (mBlurUtils.supportsBlursOnWindows()) {
+                    mBlurUtils.applyBlur(window.getDecorView().getViewRootImpl(),
+                             (int) mBlurUtils.blurRadiusOfRatio(progress), false);
+                }
 
                 // TODO(b/213872558): Support devices that don't have their power button on the
                 // right.
