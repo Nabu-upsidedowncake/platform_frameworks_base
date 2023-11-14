@@ -39,6 +39,7 @@ import android.view.Display;
 import android.view.Gravity;
 import android.view.IWindow;
 import android.view.IWindowSession;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
@@ -129,6 +130,9 @@ public class NotificationShadeWindowControllerImpl implements NotificationShadeW
     private final NotificationShadeWindowState.Buffer mStateBuffer =
             new NotificationShadeWindowState.Buffer(MAX_STATE_CHANGES_BUFFER_SIZE);
 
+    private View mAodView;
+    private boolean mAodViewAdded;
+
     @Inject
     public NotificationShadeWindowControllerImpl(Context context, WindowManager windowManager,
             IActivityManager activityManager, DozeParameters dozeParameters,
@@ -191,6 +195,8 @@ public class NotificationShadeWindowControllerImpl implements NotificationShadeW
         // Allows using a different rate for each
         mAODMaxRefreshRate = context.getResources()
                 .getInteger(R.integer.config_aodMaxRefreshRate);
+
+        mAodView = LayoutInflater.from(mContext).inflate(R.layout.empty_view, null);
     }
 
     /**
@@ -307,9 +313,15 @@ public class NotificationShadeWindowControllerImpl implements NotificationShadeW
     }
 
     private void applyKeyguardFlags(NotificationShadeWindowState state) {
-        final boolean keyguardOrAod = state.keyguardShowing
-                || (state.dozing && mDozeParameters.getAlwaysOn());
+        final boolean aod = state.dozing && mDozeParameters.getAlwaysOn();
+        if (aod) {
+            addAodView();
+        } else {
+            removeAodView();
+        }
         boolean wasKeyguardRateSet = false;
+
+        final boolean keyguardOrAod = state.keyguardShowing || aod;
         if ((keyguardOrAod && !state.mediaBackdropShowing && !state.lightRevealScrimOpaque)
                 || mKeyguardViewMediator.isAnimatingBetweenKeyguardAndSurfaceBehind()) {
             // Show the wallpaper if we're on keyguard/AOD and the wallpaper is not occluded by a
@@ -373,6 +385,37 @@ public class NotificationShadeWindowControllerImpl implements NotificationShadeW
             mLpChanged.flags |= LayoutParams.FLAG_SECURE;
         } else {
             mLpChanged.flags &= ~LayoutParams.FLAG_SECURE;
+        }
+    }
+
+    private void addAodView() {
+        if (mAodView == null || mAodViewAdded) {
+            return;
+        }
+
+        final LayoutParams lp = new LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                LayoutParams.TYPE_SYSTEM_OVERLAY,
+                LayoutParams.FLAG_NOT_FOCUSABLE,
+                PixelFormat.TRANSLUCENT);
+        lp.gravity = Gravity.TOP;
+        lp.setFitInsetsTypes(0 /* types */);
+        lp.setTitle("NotificationShadeAOD");
+        lp.packageName = mContext.getPackageName();
+        lp.layoutInDisplayCutoutMode = LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS;
+        lp.privateFlags |= PRIVATE_FLAG_OPTIMIZE_MEASURE;
+
+        Log.e(TAG, "addAodView");
+        mWindowManager.addView(mAodView, lp);
+        mAodViewAdded = true;
+    }
+
+    private void removeAodView() {
+        if (mAodView != null && mAodViewAdded) {
+            Log.e(TAG, "removeAodView");
+            mWindowManager.removeView(mAodView);
+            mAodViewAdded = false;
         }
     }
 
