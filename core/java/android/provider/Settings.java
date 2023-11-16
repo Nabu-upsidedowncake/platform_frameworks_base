@@ -5829,14 +5829,6 @@ public final class Settings {
         public static final String VIBRATE_ON_DISCONNECT = "vibrate_on_disconnect";
 
         /**
-         * Whether to inverse keys in navigation bar
-         * Default 0
-         * @hide
-         */
-        @Readable
-        public static final String NAVIGATION_BAR_INVERSE = "navigation_bar_inverse";
-
-        /**
           * Volume keys control cursor in text fields (default is 0)
           * 0 - Disabled
           * 1 - Volume up/down moves cursor left/right
