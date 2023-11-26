@@ -25,6 +25,8 @@ import android.graphics.Color
 import android.graphics.drawable.Drawable
 import android.graphics.Region
 import android.graphics.Typeface
+import android.os.AsyncTask
+import android.os.Handler
 import android.os.UserHandle
 import android.os.VibrationEffect
 import android.os.Vibrator
@@ -38,6 +40,9 @@ import android.text.style.RelativeSizeSpan
 import android.text.style.StyleSpan
 import android.text.TextUtils
 import android.util.AttributeSet
+import android.view.MotionEvent
+import android.view.GestureDetector
+import android.view.GestureDetector.SimpleOnGestureListener
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewTreeObserver
@@ -52,13 +57,27 @@ import kotlin.text.Regex
 
 class IslandView : ExtendedFloatingActionButton {
 
-    private var useIslandNotification: Boolean = false
-    private var isIslandAnimating: Boolean = false
-    private var isDismissed: Boolean = true
-    private var isTouchInsetsRemoved: Boolean = true
     private var notificationStackScroller: NotificationStackScrollLayout? = null
     private var headsUpManager: HeadsUpManagerPhone? = null
-    private var subtitleColor = Color.parseColor("#66000000")
+
+    private var subtitleColor: Int = Color.parseColor("#66000000")
+    private var titleSpannable: SpannableString = SpannableString("")
+    private var islandText: SpannableStringBuilder = SpannableStringBuilder()
+    private var notifTitle: String = ""
+    private var notifContent: String = ""
+    private var notifSubContent: String = ""
+    
+    private var useIslandNotification = false
+    private var isIslandAnimating = false
+    private var isDismissed = true
+    private var isTouchInsetsRemoved = true
+    private var isExpanded = false
+    
+    private val effectClick: VibrationEffect = VibrationEffect.createPredefined(VibrationEffect.EFFECT_CLICK)
+    private val effectTick: VibrationEffect = VibrationEffect.createPredefined(VibrationEffect.EFFECT_TICK)
+
+    private var telecomManager: TelecomManager? = null
+    private var vibrator: Vibrator? = null
 
     private val insetsListener = ViewTreeObserver.OnComputeInternalInsetsListener { internalInsetsInfo ->
         internalInsetsInfo.touchableRegion.setEmpty()
@@ -73,16 +92,16 @@ class IslandView : ExtendedFloatingActionButton {
         ))
     }
 
-    constructor(context: Context) : super(context) {
-        this.visibility = View.GONE
-    }
+    constructor(context: Context) : super(context) { init(context) }
 
-    constructor(context: Context, attrs: AttributeSet) : super(context, attrs) {
-        this.visibility = View.GONE
-    }
+    constructor(context: Context, attrs: AttributeSet) : super(context, attrs) { init(context) }
 
-    constructor(context: Context, attrs: AttributeSet, defStyleAttr: Int) : super(context, attrs, defStyleAttr) {
+    constructor(context: Context, attrs: AttributeSet, defStyleAttr: Int) : super(context, attrs, defStyleAttr) { init(context) }
+
+    fun init(context: Context) {
         this.visibility = View.GONE
+        telecomManager = context.getSystemService(Context.TELECOM_SERVICE) as TelecomManager
+        vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
     }
 
     fun setIslandEnabled(enable: Boolean) {
@@ -98,65 +117,76 @@ class IslandView : ExtendedFloatingActionButton {
     }
 
     fun showIsland(show: Boolean, expandedFraction: Float) {
-        if (show) { 
-            animateShowIsland(expandedFraction)
+        if (show) {
+            animateShowIsland(expandedFraction) 
         } else {
             animateDismissIsland()
         }
     }
 
     fun animateShowIsland(expandedFraction: Float) {
-        if (!useIslandNotification || isIslandAnimating || expandedFraction > 0.0f) {
+        if (!useIslandNotification || expandedFraction > 0.0f) {
+            return
+        } else if (isIslandAnimating) {
+            notificationStackScroller?.visibility = View.GONE
             return
         }
-        prepareIslandContent()
-        notificationStackScroller?.visibility = View.GONE
-        show()
-        postOnAnimationDelayed({
-            extend()
+        post({
+            setIslandContents(true)
+            notificationStackScroller?.visibility = View.GONE
+            show()
+            isDismissed = false
+            isIslandAnimating = true
             postOnAnimationDelayed({
-                isDismissed = false
-                isIslandAnimating = true
-                if (isTouchInsetsRemoved) {
-                    viewTreeObserver.addOnComputeInternalInsetsListener(insetsListener)
-                    isTouchInsetsRemoved = false
-                }
+                extend()
+                postOnAnimationDelayed({
+                    addInsetsListener()
+                }, 150L)
             }, 150L)
-        }, 150L)
+        })
     }
 
     fun animateDismissIsland() {
-        resetLayout()
-        shrink()
-        postOnAnimationDelayed({
-            hide()
-            isIslandAnimating = false
-            isDismissed = true
-            if (!isTouchInsetsRemoved) {
-                viewTreeObserver.removeOnComputeInternalInsetsListener(insetsListener)
-                isTouchInsetsRemoved = true
-            }
+        post({
+            shrink()
             postOnAnimationDelayed({
-                if (isDismissed && !isIslandAnimating && isTouchInsetsRemoved) {
-                    notificationStackScroller?.visibility = View.VISIBLE
-                }
-            }, 500L)
-        }, 150L)
+                resetLayout()
+                hide()
+                isIslandAnimating = false
+                isDismissed = true
+                removeInsetsListener()
+                postOnAnimationDelayed({
+                    if (isDismissed && !isIslandAnimating && isTouchInsetsRemoved) {
+                        notificationStackScroller?.visibility = View.VISIBLE
+                    }
+                }, 500L)
+            }, 150L)
+        })
     }
 
     fun updateIslandVisibility(expandedFraction: Float) {
-        if (expandedFraction > 0.0f && !isTouchInsetsRemoved) {
+        if (expandedFraction > 0.0f) {
             notificationStackScroller?.visibility = View.VISIBLE
-            visibility = View.GONE
-            viewTreeObserver.removeOnComputeInternalInsetsListener(insetsListener)
-            isTouchInsetsRemoved = true
-        } else if (useIslandNotification && isIslandAnimating && expandedFraction == 0.0f && isTouchInsetsRemoved) {
+            this.visibility = View.GONE
+            removeInsetsListener()
+        } else if (useIslandNotification && isIslandAnimating && expandedFraction == 0.0f) {
             notificationStackScroller?.visibility = View.GONE
-            visibility = View.VISIBLE
-            viewTreeObserver.addOnComputeInternalInsetsListener(insetsListener)
-            isTouchInsetsRemoved = false
+            this.visibility = View.VISIBLE
+            addInsetsListener()
         }
     }
+
+    fun addInsetsListener() {
+        if (!isTouchInsetsRemoved) return
+        viewTreeObserver.addOnComputeInternalInsetsListener(insetsListener)
+        isTouchInsetsRemoved = false
+    }
+    
+    fun removeInsetsListener() {
+        if (isTouchInsetsRemoved) return
+        viewTreeObserver.removeOnComputeInternalInsetsListener(insetsListener)
+        isTouchInsetsRemoved = true
+    } 
 
     fun setIslandBackgroundColorTint(dark: Boolean) {
         this.backgroundTintList = if (dark) {
@@ -181,64 +211,47 @@ class IslandView : ExtendedFloatingActionButton {
         val sbn = headsUpManager?.topEntry?.row?.entry?.sbn ?: return
         val notification = sbn.notification
         val icon = getNotificationIcon(sbn, notification) ?: return
-        var notifTitle = ""
-        var extraTitle = notification.extras.getCharSequence(Notification.EXTRA_TITLE)?.toString() ?: ""
+        val extraTitle = notification.extras.getCharSequence(Notification.EXTRA_TITLE)?.toString() ?: ""
         if (extraTitle.isBlank()) return
         val allPhrases = linkedSetOf<String>()
-        val extraTitlePhrases = extraTitle.split(Regex("\\s+")).filterNot { it.isBlank() }
-        val filteredTitleParts = extraTitlePhrases.mapNotNull { phrase ->
-            val alphanumericPhrase = phrase.replace(Regex("[^A-Za-z0-9]"), "")
-            if (allPhrases.contains(alphanumericPhrase.toLowerCase())) {
-                null
-            } else {
-                allPhrases.add(alphanumericPhrase.toLowerCase())
-                phrase
+        notifTitle = extraTitle.split(Regex("\\s+"))
+            .filterNot { it.isBlank() }
+            .mapNotNull { phrase ->
+                val alphanumericPhrase = phrase.replace(Regex("[^A-Za-z0-9]"), "").toLowerCase()
+                if (allPhrases.add(alphanumericPhrase)) phrase else null
             }
-        }
-        val filteredTitle = filteredTitleParts.joinToString(" ") { it }
+            .joinToString(" ") { it }
             .replace(Regex("(:)\\s+"), "$1 ")
             .replace(Regex("\\s+(:)"), " $1")
             .replace(Regex("\\s+(\\n)"), "$1")
             .trim()
-        notifTitle = filteredTitle
+            .removeSuffix(":")
         if (notifTitle.isBlank()) return
-        val notifContent = notification.extras.getCharSequence(Notification.EXTRA_TEXT)?.toString() ?: ""
-        val notifSubContent = notification.extras.getCharSequence(Notification.EXTRA_SUB_TEXT)?.toString() ?: ""
-        val islandIntent = notification.contentIntent ?: notification.fullScreenIntent
-        val titleSpannable = SpannableString(notifTitle).apply {
+        notifContent = notification.extras.getCharSequence(Notification.EXTRA_TEXT)?.toString() ?: ""
+        notifSubContent = notification.extras.getCharSequence(Notification.EXTRA_SUB_TEXT)?.toString() ?: ""
+        titleSpannable = SpannableString(notifTitle).apply {
             setSpan(StyleSpan(Typeface.BOLD), 0, notifTitle.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-        }
-        val notifText = SpannableStringBuilder().apply {
-            append(titleSpannable)
-            if (notifContent.isNotEmpty()) {
-                val contentSpannable = SpannableString(notifContent).apply {
-                    setSpan(ForegroundColorSpan(subtitleColor), 0, notifContent.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-                    setSpan(RelativeSizeSpan(0.9f), 0, notifContent.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-                }
-                append("\n")
-                append(contentSpannable)
-            }
-            if (notifSubContent.isNotEmpty()) {
-                val subContentSpannable = SpannableString(notifSubContent).apply {
-                    setSpan(ForegroundColorSpan(subtitleColor), 0, notifSubContent.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-                    setSpan(RelativeSizeSpan(0.85f), 0, notifSubContent.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-                }
-                append("\n")
-                append(subContentSpannable)
-            }
         }
         this.icon = icon
         this.iconTint = null
-        this.text = notifText
-        this.isSelected = true
         this.bringToFront()
-        animateIslandText()
-        setOnClickListener(sbn.packageName)
+        setOnTouchListener(sbn.packageName)
+    }
+
+    private fun SpannableStringBuilder.appendSpannable(spanText: String, size: Float, singleLine: Boolean) {
+        if (!spanText.isBlank()) {
+            val spannableText = SpannableString(spanText).apply {
+                setSpan(ForegroundColorSpan(subtitleColor), 0, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                setSpan(RelativeSizeSpan(size), 0, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            }
+            append(if (!singleLine) "\n" else " ")
+            append(spannableText)
+        }
     }
 
     private fun getNotificationIcon(sbn: StatusBarNotification, notification: Notification): Drawable? {
         return try {
-            val pkgname = sbn.packageName
+            val pkgname = sbn?.packageName
             if ("com.android.systemui" == pkgname) {
                 context.getDrawable(notification.icon)
             } else {
@@ -249,70 +262,114 @@ class IslandView : ExtendedFloatingActionButton {
         }
     }
 
-    private fun setOnClickListener(packageName: String) {
-        this.isClickable = true
-        this.isFocusable = true
-        this.isFocusableInTouchMode = true
-        this.setOnClickListener {
-            val telecomManager = context.getSystemService(Context.TELECOM_SERVICE) as TelecomManager
-            if (telecomManager.isRinging) {
-                telecomManager.acceptRingingCall()
-                val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
-                vibrator.vibrate(VibrationEffect.createOneShot(100, VibrationEffect.DEFAULT_AMPLITUDE))
-            } else {
-                val intent = context.packageManager.getLaunchIntentForPackage(packageName)?.apply {
-                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
-                }
-                try {
-                    context.startActivityAsUser(intent, UserHandle.CURRENT)
-                } catch (e: Exception) {}
+    private fun setOnTouchListener(packageName: String) {
+        val gestureDetector = GestureDetector(context, object : GestureDetector.SimpleOnGestureListener() {
+            override fun onSingleTapConfirmed(e: MotionEvent): Boolean {
+                onSingleTap(packageName)
+                return true
             }
-            hide()
+            override fun onLongPress(e: MotionEvent) {
+                onLongPress()
+            }
+        })
+        this.setOnTouchListener { view, event ->
+            gestureDetector.onTouchEvent(event)
+            true
         }
+    }
 
-        this.setOnLongClickListener {
-            val telecomManager = context.getSystemService(Context.TELECOM_SERVICE) as TelecomManager
-            if (telecomManager.isRinging) {
-                telecomManager.endCall()
-                val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
-                vibrator.vibrate(VibrationEffect.createOneShot(50, VibrationEffect.DEFAULT_AMPLITUDE))
-                hide()
-                true
-            } else {
+    private fun onLongPress() {
+        if (isDeviceRinging()) {
+            telecomManager?.endCall()
+        } else {
+            setIslandContents(false)
+            isExpanded = true
+            postOnAnimationDelayed({
                 expandIslandView()
-                true
-            }
+            }, 50)
         }
+        AsyncTask.execute { vibrator?.vibrate(effectClick) }
     }
-    
-    fun resetLayout() {
-        val params = this.layoutParams as ViewGroup.MarginLayoutParams
-        params.width = ViewGroup.LayoutParams.WRAP_CONTENT
-        val margin = 0
-        params.setMargins(margin, params.topMargin, margin, params.bottomMargin)
-        this.layoutParams = params
+
+    private fun onSingleTap(packageName: String) {
+        if (isDeviceRinging()) {
+            telecomManager?.acceptRingingCall()
+        } else {
+            val intent = context.packageManager.getLaunchIntentForPackage(packageName)?.apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+            }
+            try {
+                context.startActivityAsUser(intent, UserHandle.CURRENT)
+            } catch (e: Exception) {}
+        }
+        AsyncTask.execute { vibrator?.vibrate(effectTick) }
     }
-    
-    fun animateIslandText() {
-        this.iconSize = resources.getDimensionPixelSize(R.dimen.island_icon_size) / 2
-        this.isSingleLine = true
-        this.maxLines = 1
-        this.ellipsize = TextUtils.TruncateAt.MARQUEE
-        this.marqueeRepeatLimit = -1
-        this.setHorizontallyScrolling(true)
+
+    private fun isDeviceRinging(): Boolean {
+        return telecomManager?.isRinging ?: false
+    }
+
+    private fun resetLayout() {
+        if (isExpanded) {
+            val params = this.layoutParams as ViewGroup.MarginLayoutParams
+            params.width = ViewGroup.LayoutParams.WRAP_CONTENT
+            val margin = 0
+            params.setMargins(margin, params.topMargin, margin, params.bottomMargin)
+            this.layoutParams = params
+        }
+        removeSpans(islandText)
+        isExpanded = false
     }
 
     fun expandIslandView() {
         TransitionManager.beginDelayedTransition(parent as ViewGroup, AutoTransition())
-        this.iconSize = resources.getDimensionPixelSize(R.dimen.island_icon_size)
-        this.isSingleLine = false
-        this.maxLines = 4
-        this.ellipsize = TextUtils.TruncateAt.END
-        this.setHorizontallyScrolling(false)
         val params = this.layoutParams as ViewGroup.MarginLayoutParams
         params.width = ViewGroup.LayoutParams.MATCH_PARENT
         val margin = resources.getDimensionPixelSize(R.dimen.island_side_margin)
         params.setMargins(margin, params.topMargin, margin, params.bottomMargin)
         this.layoutParams = params
+    }
+
+    private fun buildSpannableText(title: SpannableString, content: String, subContent: String, singleLine: Boolean): SpannableStringBuilder {
+        return SpannableStringBuilder().apply {
+            append(title as CharSequence)
+            if (!content.isBlank()) {
+                appendSpannable(content, 0.9f, singleLine)
+            }
+            if (!notifSubContent.isBlank()) {
+                appendSpannable(subContent, 0.85f, singleLine)
+            }
+        }
+    }
+
+    private fun setIslandContents(singleLine: Boolean) {
+        prepareIslandContent()
+        this.apply {
+            this.iconSize = if (singleLine) resources.getDimensionPixelSize(R.dimen.island_icon_size) / 2 else resources.getDimensionPixelSize(R.dimen.island_icon_size)
+            this.islandText = buildSpannableText(titleSpannable, notifContent, notifSubContent, singleLine)
+            if (singleLine) {
+                val maxLength = 28
+                val singleLineText = if (islandText.length > maxLength) {
+                    val spanText = SpannableStringBuilder().append(islandText, 0, maxLength)
+                    val ellipsisSpannable = SpannableString("...")
+                    ellipsisSpannable.setSpan(ForegroundColorSpan(subtitleColor), 0, 3, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                    spanText.append(ellipsisSpannable)
+                } else {
+                    islandText
+                }
+                this.text = singleLineText
+            } else {
+                this.text = islandText
+            }
+            this.isSingleLine = singleLine
+            this.ellipsize = TextUtils.TruncateAt.END
+            this.isSelected = singleLine         
+        }
+    }
+        
+    private fun removeSpans(builder: SpannableStringBuilder) {
+        val spans = builder.getSpans(0, builder.length, Object::class.java)
+        for (span in spans) { builder.removeSpan(span) }
+        builder.clear()
     }
 }
