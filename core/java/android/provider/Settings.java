@@ -5900,11 +5900,6 @@ public final class Settings {
          */
 
         /**
-         * @hide
-         */
-        public static final String ENABLE_TASKBAR = "enable_taskbar";
-
-        /**
          * Double tap on lockscreen to sleep
          * @hide
          */
