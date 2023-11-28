@@ -18,11 +18,14 @@ package com.android.systemui.island
 import android.app.ActivityOptions
 import android.app.Notification
 import android.content.pm.ApplicationInfo
+import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.ColorStateList
+import android.graphics.Bitmap
 import android.graphics.Color
+import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
 import android.graphics.Region
 import android.graphics.Typeface
@@ -212,32 +215,49 @@ class IslandView : ExtendedFloatingActionButton {
     private fun prepareIslandContent() {
         val sbn = headsUpManager?.topEntry?.row?.entry?.sbn ?: return
         val notification = sbn.notification
-        val icon = getNotificationIcon(sbn, notification) ?: return
-        val extraTitle = notification.extras.getCharSequence(Notification.EXTRA_TITLE)?.toString() ?: ""
-        if (extraTitle.isBlank()) return
-        val allPhrases = linkedSetOf<String>()
-        notifTitle = extraTitle.split(Regex("\\s+"))
-            .filterNot { it.isBlank() }
-            .mapNotNull { phrase ->
-                val alphanumericPhrase = phrase.replace(Regex("[^A-Za-z0-9]"), "").toLowerCase()
-                if (allPhrases.add(alphanumericPhrase)) phrase else null
+        val largeIconBitmap = notification.extras.getParcelable<Bitmap>(Notification.EXTRA_LARGE_ICON)
+        val notificationTitle = notification.extras.getCharSequence(Notification.EXTRA_TITLE)?.toString() ?: ""
+        val notificationText = notification.extras.getCharSequence(Notification.EXTRA_TEXT)?.toString() ?: ""
+        val iconDrawable = if (largeIconBitmap != null) {
+            BitmapDrawable(context.resources, largeIconBitmap)
+        } else {
+            getNotificationIcon(sbn, notification)
+        } ?: return
+        if (largeIconBitmap != null) {
+            notifTitle = sbn?.packageName ?: ""
+            if (notifTitle.isBlank()) return
+            notifContent = if (notificationTitle.isNotBlank() && notificationText.isNotBlank()) {
+                "$notificationTitle : $notificationText"
+            } else {
+                notificationTitle.ifBlank { notificationText }
             }
-            .joinToString(" ") { it }
-            .replace(Regex("(:)\\s+"), "$1 ")
-            .replace(Regex("\\s+(:)"), " $1")
-            .replace(Regex("\\s+(\\n)"), "$1")
-            .trim()
-            .removeSuffix(":")
-        if (notifTitle.isBlank()) return
-        notifContent = notification.extras.getCharSequence(Notification.EXTRA_TEXT)?.toString() ?: ""
+        } else {
+            val extraTitle = notification.extras.getCharSequence(Notification.EXTRA_TITLE)?.toString() ?: ""
+            if (extraTitle.isBlank()) return
+            val allPhrases = linkedSetOf<String>()
+            notifTitle = extraTitle.split(Regex("\\s+"))
+                .filterNot { it.isBlank() }
+                .mapNotNull { phrase ->
+                    val alphanumericPhrase = phrase.replace(Regex("[^A-Za-z0-9]"), "").toLowerCase()
+                    if (allPhrases.add(alphanumericPhrase)) phrase else null
+                }
+                .joinToString(" ") { it }
+                .replace(Regex("(:)\\s+"), "$1 ")
+                .replace(Regex("\\s+(:)"), " $1")
+                .replace(Regex("\\s+(\\n)"), "$1")
+                .trim()
+                .removeSuffix(":")
+            if (notifTitle.isBlank()) return
+            notifContent = notification.extras.getCharSequence(Notification.EXTRA_TEXT)?.toString() ?: ""
+        }
         notifSubContent = notification.extras.getCharSequence(Notification.EXTRA_SUB_TEXT)?.toString() ?: ""
         titleSpannable = SpannableString(notifTitle).apply {
             setSpan(StyleSpan(Typeface.BOLD), 0, notifTitle.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
         }
-        this.icon = icon
+        this.icon = iconDrawable
         this.iconTint = null
         this.bringToFront()
-        setOnTouchListener(sbn.packageName)
+        setOnTouchListener(sbn.notification.contentIntent)
     }
 
     private fun SpannableStringBuilder.appendSpannable(spanText: String, size: Float, singleLine: Boolean) {
@@ -270,10 +290,10 @@ class IslandView : ExtendedFloatingActionButton {
         }
     }
 
-    private fun setOnTouchListener(packageName: String) {
+    private fun setOnTouchListener(intent: PendingIntent) {
         val gestureDetector = GestureDetector(context, object : GestureDetector.SimpleOnGestureListener() {
             override fun onSingleTapConfirmed(e: MotionEvent): Boolean {
-                onSingleTap(packageName)
+                onSingleTap(intent)
                 return true
             }
             override fun onLongPress(e: MotionEvent) {
@@ -299,15 +319,12 @@ class IslandView : ExtendedFloatingActionButton {
         AsyncTask.execute { vibrator?.vibrate(effectClick) }
     }
 
-    private fun onSingleTap(packageName: String) {
+    private fun onSingleTap(intent: PendingIntent) {
         if (isDeviceRinging()) {
             telecomManager?.acceptRingingCall()
         } else {
-            val intent = context.packageManager.getLaunchIntentForPackage(packageName)?.apply {
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
-            }
             try {
-                context.startActivityAsUser(intent, UserHandle.CURRENT)
+                intent.send()
             } catch (e: Exception) {}
         }
         AsyncTask.execute { vibrator?.vibrate(effectTick) }
