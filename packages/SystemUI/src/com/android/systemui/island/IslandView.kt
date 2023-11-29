@@ -17,7 +17,6 @@ package com.android.systemui.island
 
 import android.app.ActivityOptions
 import android.app.Notification
-import android.content.pm.ApplicationInfo
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -41,7 +40,6 @@ import android.text.style.RelativeSizeSpan
 import android.text.style.StyleSpan
 import android.text.TextUtils
 import android.util.AttributeSet
-import android.util.IconDrawableFactory
 import android.view.MotionEvent
 import android.view.GestureDetector
 import android.view.GestureDetector.SimpleOnGestureListener
@@ -254,16 +252,10 @@ class IslandView : ExtendedFloatingActionButton {
     private fun getNotificationIcon(sbn: StatusBarNotification, notification: Notification): Drawable? {
         return try {
             val pkgname = sbn?.packageName
-            val uid = sbn.getUser().getIdentifier()
-            val appInfo: ApplicationInfo = context.packageManager.getApplicationInfoAsUser(
-                    pkgname,
-                    PackageManager.ApplicationInfoFlags.of(PackageManager.GET_META_DATA.toLong()),
-                    uid)
             if ("com.android.systemui" == pkgname) {
                 context.getDrawable(notification.icon)
             } else {
-                val iconFactory: IconDrawableFactory = IconDrawableFactory.newInstance(context)
-                iconFactory.getBadgedIcon(appInfo, uid)
+                context.packageManager.getApplicationIcon(pkgname)
             }
         } catch (e: PackageManager.NameNotFoundException) {
             null
