@@ -6159,12 +6159,6 @@ public final class Settings {
         public static final String ISLAND_NOTIFICATION = "island_notification";
 
         /**
-         * Enable and Disable Dual Tone Colors QsPanel
-         * @hide
-         */
-        public static final String QS_DUAL_TONE = "qs_dual_tone";
-
-        /**
          * @hide
          */
         public static final String ISLAND_NOWPLAYING = "island_nowplaying";
