@@ -207,14 +207,13 @@ public class PixelPropsUtils {
     }
 
     private static void spoofBuildGms() {
-        // Alter build parameters to Nexus 5X for avoiding hardware attestation enforcement
-        setPropValue("PRODUCT", "foster_e");
-        setPropValue("MODEL", "SHIELD Android TV");
+        // Alter build parameters to avoid hardware attestation enforcement
+        setPropValue("BRAND", "NVIDIA");
+        setPropValue("MANUFACTURER", "NVIDIA");
         setPropValue("DEVICE", "foster");
         setPropValue("FINGERPRINT", "NVIDIA/foster_e/foster:7.0/NRD90M/2427173_1038.2788:user/release-keys");
-        setPropValue("TYPE", "user");
-        setPropValue("TAGS", "release-keys");
-        setVersionField("DEVICE_INITIAL_SDK_INT", Build.VERSION_CODES.N_MR1);
+        setPropValue("MODEL", "SHIELD Android TV");
+        setPropValue("PRODUCT", "foster_e");
         setVersionFieldString("SECURITY_PATCH", "2018-01-05");
     }
 
