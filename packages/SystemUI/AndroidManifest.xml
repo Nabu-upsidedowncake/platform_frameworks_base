@@ -366,9 +366,6 @@
     <uses-permission android:name="android.permission.READ_SYNC_SETTINGS" />
     <uses-permission android:name="android.permission.WRITE_SYNC_SETTINGS" />
 
-    <!-- DataSwitch tile -->
-    <uses-permission android:name="android.permission.WRITE_APN_SETTINGS" />
-
     <!-- Smartspace -->
     <uses-permission android:name="android.permission.ACCESS_NOTIFICATION_POLICY"/>
     <permission android:name="com.android.systemui.permission.SEND_ALERT_BROADCASTS" android:protectionLevel="preinstalled|signature"/>

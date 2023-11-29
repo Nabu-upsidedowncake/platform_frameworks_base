@@ -24,7 +24,6 @@ import com.android.systemui.qs.tiles.CaffeineTile
 import com.android.systemui.qs.tiles.CellularTile
 import com.android.systemui.qs.tiles.CompassTile
 import com.android.systemui.qs.tiles.CPUInfoTile
-import com.android.systemui.qs.tiles.DataSwitchTile
 import com.android.systemui.qs.tiles.HeadsUpTile
 import com.android.systemui.qs.tiles.MonoToggleTile
 import com.android.systemui.qs.tiles.ScreenshotTile
@@ -77,12 +76,6 @@ interface AwakenModule {
     @IntoMap
     @StringKey(CPUInfoTile.TILE_SPEC)
     fun bindCPUInfoTile(cpuInfoTile: CPUInfoTile): QSTileImpl<*>
-
-    /** Inject DataSwitchTile into tileMap in QSModule */
-    @Binds
-    @IntoMap
-    @StringKey(DataSwitchTile.TILE_SPEC)
-    fun bindDataSwitchTile(dataSwitchTile: DataSwitchTile): QSTileImpl<*>
 
     /** Inject HeadsUpTile into tileMap in QSModule */
     @Binds
