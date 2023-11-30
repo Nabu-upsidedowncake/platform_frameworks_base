@@ -208,14 +208,14 @@ public class PixelPropsUtils {
 
     private static void spoofBuildGms() {
         // Alter build parameters to Nexus 5X for avoiding hardware attestation enforcement
-        setPropValue("PRODUCT", "sailfish");
-        setPropValue("MODEL", "Pixel");
-        setPropValue("DEVICE", "sailfish");
-        setPropValue("FINGERPRINT", "google/sailfish/sailfish:8.1.0/OPM2.171019.029/4657601:user/release-keys");
+        setPropValue("PRODUCT", "foster_e");
+        setPropValue("MODEL", "SHIELD Android TV");
+        setPropValue("DEVICE", "foster");
+        setPropValue("FINGERPRINT", "NVIDIA/foster_e/foster:7.0/NRD90M/2427173_1038.2788:user/release-keys");
         setPropValue("TYPE", "user");
         setPropValue("TAGS", "release-keys");
-        setVersionField("DEVICE_INITIAL_SDK_INT", Build.VERSION_CODES.O_MR1);
-        setVersionFieldString("SECURITY_PATCH", "2018-04-05");
+        setVersionField("DEVICE_INITIAL_SDK_INT", Build.VERSION_CODES.N_MR1);
+        setVersionFieldString("SECURITY_PATCH", "2018-01-05");
     }
 
     public static void setProps(Context context) {
