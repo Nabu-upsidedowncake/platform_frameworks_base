@@ -300,7 +300,6 @@ import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.gui.DropInputMode;
 import android.hardware.HardwareBuffer;
-import android.hardware.power.Mode;
 import android.net.Uri;
 import android.os.Binder;
 import android.os.Build;
@@ -309,7 +308,6 @@ import android.os.Debug;
 import android.os.IBinder;
 import android.os.IRemoteCallback;
 import android.os.PersistableBundle;
-import android.os.PowerManagerInternal;
 import android.os.Process;
 import android.os.RemoteCallbackList;
 import android.os.RemoteException;
@@ -6143,13 +6141,12 @@ final class ActivityRecord extends WindowToken implements WindowManagerService.A
                 Slog.v(TAG_VISIBILITY, "Start visible activity, " + this);
             }
             setState(STARTED, "makeActiveIfNeeded");
-            setActivityBoost(true);
+
             try {
                 mAtmService.getLifecycleManager().scheduleTransaction(app.getThread(), token,
                         StartActivityItem.obtain(takeOptions()));
             } catch (Exception e) {
                 Slog.w(TAG, "Exception thrown sending start: " + intent.getComponent(), e);
-                setActivityBoost(false);
             }
             // The activity may be waiting for stop, but that is no longer appropriate if we are
             // starting the activity again
@@ -6798,16 +6795,8 @@ final class ActivityRecord extends WindowToken implements WindowManagerService.A
         }
     }
 
-    protected void setActivityBoost(boolean enable) {
-        PowerManagerInternal mPowerManagerInternal = LocalServices.getService(PowerManagerInternal.class);
-        if (mPowerManagerInternal != null) {
-            mPowerManagerInternal.setPowerMode(Mode.LAUNCH, enable);
-        }
-    }
-
     /** Called when the windows associated app window container are drawn. */
     private void onWindowsDrawn() {
-        setActivityBoost(false);
         final TransitionInfoSnapshot info = mTaskSupervisor
                 .getActivityMetricsLogger().notifyWindowsDrawn(this);
         final boolean validInfo = info != null;
