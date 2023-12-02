@@ -47,7 +47,6 @@ public class PixelPropsUtils {
     private static final String PACKAGE_GMS = "com.google.android.gms";
     private static final String PROCESS_GMS_UNSTABLE = PACKAGE_GMS + ".unstable";
     private static final String PACKAGE_GPHOTOS = "com.google.android.apps.photos";
-    private static final String PACKAGE_SETUPWIZARD = "com.google.android.setupwizard";
     private static final String PACKAGE_SI = "com.google.android.settings.intelligence";
     private static final String SAMSUNG = "com.samsung.";
     private static final String SPOOF_MUSIC_APPS = "persist.sys.disguise_props_for_music_app";
@@ -131,7 +130,7 @@ public class PixelPropsUtils {
     private static final ComponentName GMS_ADD_ACCOUNT_ACTIVITY = ComponentName.unflattenFromString(
             "com.google.android.gms/.auth.uiflows.minutemaid.MinuteMaidActivity");
 
-    private static volatile boolean sIsGms, sIsFinsky, sIsSetupWizard;
+    private static volatile boolean sIsGms, sIsFinsky;
     private static volatile String sProcessName;
 
     static {
@@ -182,9 +181,11 @@ public class PixelPropsUtils {
     }
 
     private static boolean shouldTryToCertifyDevice() {
-        final boolean[] shouldCertify = {true};
         final boolean was = isGmsAddAccountActivityOnTop();
         final String reason = "GmsAddAccountActivityOnTop";
+        if (!was) {
+            return true;
+        }
         dlog("Skip spoofing build for GMS, because " + reason + "!");
         TaskStackListener taskStackListener = new TaskStackListener() {
             @Override
@@ -192,16 +193,17 @@ public class PixelPropsUtils {
                 final boolean isNow = isGmsAddAccountActivityOnTop();
                 if (isNow ^ was) {
                     dlog(String.format("%s changed: isNow=%b, was=%b, killing myself!", reason, isNow, was));
-                    shouldCertify[0] = false;
+                    Process.killProcess(Process.myPid());
                 }
             }
         };
         try {
             ActivityTaskManager.getService().registerTaskStackListener(taskStackListener);
+            return false;
         } catch (Exception e) {
             Log.e(TAG, "Failed to register task stack listener!", e);
+            return true;
         }
-        return shouldCertify[0];
     }
 
     private static void spoofBuildGms() {
@@ -238,7 +240,6 @@ public class PixelPropsUtils {
         sProcessName = processName;
         sIsGms = packageName.equals(PACKAGE_GMS) && processName.equals(PROCESS_GMS_UNSTABLE);
         sIsFinsky = packageName.equals(PACKAGE_FINSKY);
-        sIsSetupWizard = packageName.equals(PACKAGE_SETUPWIZARD);
 
         if (sIsGms) {
             if (shouldTryToCertifyDevice()) {
@@ -335,13 +336,13 @@ public class PixelPropsUtils {
     }
 
     private static boolean isCallerSafetyNet() {
-        return sIsGms && Arrays.stream(Thread.currentThread().getStackTrace())
-                .anyMatch(elem -> elem.getClassName().contains("DroidGuard"));
+        return shouldTryToCertifyDevice() && sIsGms && Arrays.stream(Thread.currentThread().getStackTrace())
+                .anyMatch(elem -> elem.getClassName().toLowerCase().contains("droidguard"));
     }
 
     public static void onEngineGetCertificateChain() {
         // Check stack for SafetyNet or Play Integrity
-        if ((isCallerSafetyNet() || sIsFinsky) && !sIsSetupWizard && shouldTryToCertifyDevice()) {
+        if (isCallerSafetyNet() || sIsFinsky) {
             dlog("Blocked key attestation sIsGms=" + sIsGms + " sIsFinsky=" + sIsFinsky);
             throw new UnsupportedOperationException();
         }
