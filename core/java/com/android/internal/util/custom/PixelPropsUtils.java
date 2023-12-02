@@ -130,8 +130,8 @@ public class PixelPropsUtils {
     private static final ComponentName GMS_ADD_ACCOUNT_ACTIVITY = ComponentName.unflattenFromString(
             "com.google.android.gms/.auth.uiflows.minutemaid.MinuteMaidActivity");
 
-    private static volatile boolean sIsGms, sIsFinsky;
-    private static volatile String sProcessName;
+    private static volatile boolean sIsGms = false;
+    private static volatile boolean sIsFinsky = false;
 
     static {
         propsToKeep = new HashMap<>();
@@ -180,31 +180,34 @@ public class PixelPropsUtils {
             Arrays.asList(customGoogleCameraPackages).contains(packageName);
     }
 
-    private static boolean shouldTryToCertifyDevice() {
-        final boolean was = isGmsAddAccountActivityOnTop();
-        final String reason = "GmsAddAccountActivityOnTop";
-        if (!was) {
-            return true;
+    public static boolean setPropsForGms(String packageName) {
+        if (packageName.equals("com.android.vending")) {
+            sIsFinsky = true;
         }
-        dlog("Skip spoofing build for GMS, because " + reason + "!");
-        TaskStackListener taskStackListener = new TaskStackListener() {
-            @Override
-            public void onTaskStackChanged() {
-                final boolean isNow = isGmsAddAccountActivityOnTop();
-                if (isNow ^ was) {
-                    dlog(String.format("%s changed: isNow=%b, was=%b, killing myself!", reason, isNow, was));
-                    Process.killProcess(Process.myPid());
+        if (packageName.equals("com.google.android.gms")) {
+            setPropValue("TIME", System.currentTimeMillis());
+            final String processName = Application.getProcessName();
+            if (processName.toLowerCase().contains("unstable")
+                    || processName.toLowerCase().contains("instrumentation")) {
+                sIsGms = true;
+                final boolean was = isGmsAddAccountActivityOnTop();
+                final TaskStackListener taskStackListener = new TaskStackListener() {
+                    @Override
+                    public void onTaskStackChanged() {
+                        final boolean is = isGmsAddAccountActivityOnTop();
+                        if (is ^ was) {
+                            dlog("GmsAddAccountActivityOnTop is:" + is + " was:" + was + ", killing myself!");
+                            // process will restart automatically later
+                            Process.killProcess(Process.myPid());
+                        }
+                    }
+                };
+                try {
+                    ActivityTaskManager.getService().registerTaskStackListener(taskStackListener);
+                } catch (Exception e) {
+                    Log.e(TAG, "Failed to register task stack listener!", e);
                 }
-            }
-        };
-        try {
-            ActivityTaskManager.getService().registerTaskStackListener(taskStackListener);
-            return false;
-        } catch (Exception e) {
-            Log.e(TAG, "Failed to register task stack listener!", e);
-            return true;
-        }
-    }
+                if (was) return true;
 
     private static void spoofBuildGms() {
         // Alter build parameters to Nexus 5X for avoiding hardware attestation enforcement
@@ -227,7 +230,10 @@ public class PixelPropsUtils {
         final String processName = Application.getProcessName();
 
         propsToChangeGeneric.forEach((k, v) -> setPropValue(k, v));
-        if (packageName == null || processName == null || packageName.isEmpty()) {
+        if (packageName == null || packageName.isEmpty()) {
+            return;
+        }
+        if (setPropsForGms(packageName)) {
             return;
         }
         if (Arrays.asList(packagesToKeep).contains(packageName)) {
@@ -237,16 +243,7 @@ public class PixelPropsUtils {
             return;
         }
         Map<String, Object> propsToChange = new HashMap<>();
-        sProcessName = processName;
-        sIsGms = packageName.equals(PACKAGE_GMS) && processName.equals(PROCESS_GMS_UNSTABLE);
-        sIsFinsky = packageName.equals(PACKAGE_FINSKY);
-
-        if (sIsGms) {
-            if (shouldTryToCertifyDevice()) {
-                dlog("Spoofing build for GMS");
-                spoofBuildGms();
-            }
-        } else if (packageName.startsWith("com.google.")
+        if (packageName.startsWith("com.google.")
                 || packageName.startsWith(SAMSUNG)
                 || Arrays.asList(packagesToChangePixel2).contains(packageName)
                 || Arrays.asList(packagesToChangePixel8Pro).contains(packageName)) {
@@ -336,19 +333,19 @@ public class PixelPropsUtils {
     }
 
     private static boolean isCallerSafetyNet() {
-        return shouldTryToCertifyDevice() && sIsGms && Arrays.stream(Thread.currentThread().getStackTrace())
-                .anyMatch(elem -> elem.getClassName().toLowerCase().contains("droidguard"));
+        return sIsGms && Arrays.stream(Thread.currentThread().getStackTrace())
+                .anyMatch(elem -> elem.getClassName().contains("DroidGuard"));
     }
 
     public static void onEngineGetCertificateChain() {
         // Check stack for SafetyNet or Play Integrity
         if (isCallerSafetyNet() || sIsFinsky) {
-            dlog("Blocked key attestation sIsGms=" + sIsGms + " sIsFinsky=" + sIsFinsky);
+            Log.i(TAG, "Blocked key attestation sIsGms=" + sIsGms + " sIsFinsky=" + sIsFinsky);
             throw new UnsupportedOperationException();
         }
     }
 
     public static void dlog(String msg) {
-        if (DEBUG) Log.d(TAG, "[" + sProcessName + "] " + msg);
+        if (DEBUG) Log.d(TAG, msg);
     }
 }
