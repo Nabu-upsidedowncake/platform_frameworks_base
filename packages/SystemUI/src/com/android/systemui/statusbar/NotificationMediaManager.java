@@ -107,6 +107,9 @@ public class NotificationMediaManager implements Dumpable {
 
     private static final String NOWPLAYING_SERVICE = "com.google.android.as";
 
+    private static final String ISLAND_NOWPLAYING =
+            "system:" + Settings.System.ISLAND_NOWPLAYING;
+
     private final StatusBarStateController mStatusBarStateController;
     private final SysuiColorExtractor mColorExtractor;
     private final KeyguardStateController mKeyguardStateController;
@@ -254,14 +257,14 @@ public class NotificationMediaManager implements Dumpable {
 
         notifUtils = new NotificationUtils(mContext);
         TunerService tunerService = Dependency.get(TunerService.class);
-        tunerService.addTunable(mTunable, ISLAND_NOTIFICATION);
+        tunerService.addTunable(mTunable, ISLAND_NOWPLAYING);
     }
 
     private final TunerService.Tunable mTunable = new TunerService.Tunable() {
         @Override
         public void onTuningChanged(String key, String newValue) {
             switch (key) {
-                case ISLAND_NOTIFICATION:
+                case ISLAND_NOWPLAYING:
                     mIslandEnabled = TunerService.parseIntegerSwitch(newValue, true);
                     break;
                 default:
