@@ -83,6 +83,7 @@ public class PixelPropsUtils {
                 "com.google.android.wallpaper.effects",
                 "com.google.pixel.livewallpaper",
                 "com.google.android.apps.wallpaper.pixel",
+                "com.google.android.inputmethod.latin",
                 "com.google.android.apps.wallpaper",
                 "com.google.android.apps.customization.pixel",
                 "com.google.android.apps.privacy.wildlife",
@@ -161,12 +162,12 @@ public class PixelPropsUtils {
         propsToChangeRecentPixel = new HashMap<>();
         propsToChangeRecentPixel.put("BRAND", "google");
         propsToChangeRecentPixel.put("MANUFACTURER", "Google");
-        propsToChangeRecentPixel.put("DEVICE", "husky");
-        propsToChangeRecentPixel.put("PRODUCT", "husky");
-        propsToChangeRecentPixel.put("HARDWARE", "husky");
-        propsToChangeRecentPixel.put("MODEL", "Pixel 8 Pro");
-        propsToChangeRecentPixel.put("ID", "UD1A.231105.004");
-        propsToChangeRecentPixel.put("FINGERPRINT", "google/husky/husky:14/UD1A.231105.004/11010374:user/release-keys");
+        propsToChangeRecentPixel.put("DEVICE", "tangorpro");
+        propsToChangeRecentPixel.put("PRODUCT", "tangorpro");
+        propsToChangeRecentPixel.put("HARDWARE", "tangorpro");
+        propsToChangeRecentPixel.put("MODEL", "Pixel Tab");
+        propsToChangeRecentPixel.put("ID", "UP1A.231105.003");
+        propsToChangeRecentPixel.put("FINGERPRINT", "google/tangorpro/tangorpro:14/UP1A.231105.003/11010452:user/release-keys");
         propsToChangePixel5 = new HashMap<>();
         propsToChangePixel5.put("BRAND", "google");
         propsToChangePixel5.put("MANUFACTURER", "Google");
