@@ -18,11 +18,8 @@ package com.android.systemui.util;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
-import android.app.PendingIntent;
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.media.AppVolume;
-import android.media.AudioManager;
 import android.media.MediaMetadata;
 import android.os.Handler;
 import android.os.Looper;
@@ -58,14 +55,12 @@ public class NotificationUtils {
         Bitmap albumArt = metadata.getBitmap(MediaMetadata.METADATA_KEY_ALBUM_ART);
         String title = metadata.getString(MediaMetadata.METADATA_KEY_TITLE);
         String artist = metadata.getString(MediaMetadata.METADATA_KEY_ARTIST);
-        PendingIntent contentIntent = getActiveAppVolumePackageIntent();
-        if (title == null || artist == null || contentIntent == null) return;
+        if (title == null || artist == null) return;
         Notification notification = new NotificationCompat.Builder(context, CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_music_note)
                 .setLargeIcon(albumArt) 
                 .setContentTitle("Now Playing")
                 .setContentText(title + " by " + artist)
-                .setContentIntent(contentIntent)
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .setCategory(NotificationCompat.CATEGORY_MESSAGE)
                 .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
@@ -77,17 +72,5 @@ public class NotificationUtils {
     
     public void cancelNowPlayingNotification() {
         notificationManager.cancel(NOTIFICATION_ID);
-    }
-
-    private PendingIntent getActiveAppVolumePackageIntent() {
-        AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
-        for (AppVolume av : audioManager.listAppVolumes()) {
-            if (av.isActive()) {
-                return PendingIntent.getActivity(context, 0,
-                            context.getPackageManager().getLaunchIntentForPackage(av.getPackageName()), 
-                                PendingIntent.FLAG_IMMUTABLE);
-            }
-        }
-        return null;
     }
 }

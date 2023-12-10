@@ -274,7 +274,8 @@ class IslandView : ExtendedFloatingActionButton {
         } else {
             notifPackage = sbn.packageName
         }
-        setOnTouchListener(sbn.notification.contentIntent ?: return, notifPackage)
+        if (sbn.notification.contentIntent == null) return
+        setOnTouchListener(sbn.notification.contentIntent, notifPackage)
     }
 
     fun getApplicationInfo(sbn: StatusBarNotification): ApplicationInfo {
