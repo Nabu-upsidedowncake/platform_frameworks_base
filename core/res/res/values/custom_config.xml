@@ -206,5 +206,5 @@
     <bool name="config_supportsScreenOffUdfps">false</bool>
 
     <!-- Boost Framework -->
-    <bool name="config_supportsBoostFramework">false</bool>
+    <bool name="config_supportsBoostFramework">true</bool>
 </resources>
