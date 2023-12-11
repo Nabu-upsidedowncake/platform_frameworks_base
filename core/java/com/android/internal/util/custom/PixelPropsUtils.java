@@ -92,7 +92,6 @@ public class PixelPropsUtils {
                 "com.nhs.online.nhsonline",
                 "com.amazon.avod.thirdpartyclient",
                 "com.disney.disneyplus",
-                "com.netflix.mediaclient",
                 "in.startv.hotstar",
                 "com.google.android.apps.emojiwallpaper",
                 "com.google.android.wallpaper.effects",
