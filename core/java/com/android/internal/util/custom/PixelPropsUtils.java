@@ -62,7 +62,7 @@ public class PixelPropsUtils {
 
     private static final Map<String, Object> propsToChangeRecentPixel =
             createGoogleSpoofProps("Pixel 8 Pro",
-                    "google/husky/husky:14/UQ1A.231205.015/11084887:user/release-keys");
+                    "google/tangorpro/tangorpro:14/UQ1A.231205.015/11084887:user/release-keys");
 
     private static final Map<String, Object> propsToChangePixel5a =
             createGoogleSpoofProps("Pixel 5a",
